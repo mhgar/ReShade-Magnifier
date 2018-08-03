@@ -49,7 +49,15 @@ uniform float ZoomLevel <
 	ui_max = 10.0;
 	ui_step = 0.01;
 	ui_tooltip = "How much the magnifier will scale things.";
-> = 3.0;
+> = 2.5;
+
+uniform float MagnifierOpacity <
+	ui_type = "drag";
+	ui_min = 0.0; 
+	ui_max = 1.0;
+	ui_step = 0.001;
+	ui_tooltip = "How much opacity the magnifier has.";
+> = 1.0;
 
 #include "ReShade.fxh"
 
@@ -71,6 +79,7 @@ sampler2D pointBuffer {
 // Does ReShade even have math functions? Please tell me where they are :v
 int abs(float n) { return n < 0 ? -n : n; }
 float2 uv_to_screen(float2 uv) { return float2(uv.x * ReShade::ScreenSize.x, uv.y * ReShade::ScreenSize.y); }
+bool outside_bounds(float2 p) { return p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0; }
 
 bool is_in_circle(float2 p, float2 centre, float radius) {
 	return (p.x - centre.x) * (p.x - centre.x) + 
@@ -97,7 +106,13 @@ float4 PS_Magnifier(float4 pos : SV_POSITION, float2 uv : TEXCOORD) : SV_TARGET 
 		// Essentially offset from the magnifier and take a pixel to magnify (and there's also some scaling stuff, too).
 		float2 offset = uv - draw_pos;
 		float2 take_pos = MagnifyPosition + offset * scale;
-		return Filtering == FILTER_LINEAR ? tex2D(ReShade::BackBuffer, take_pos) : tex2D(pointBuffer, take_pos);
+		float4 behind_pixel = tex2D(ReShade::BackBuffer, uv);
+		
+		if (outside_bounds(take_pos)) {
+			return float4(0.0, 0.0, 0.0, 1.0);
+		} else {
+			return lerp(behind_pixel, Filtering == FILTER_LINEAR ? tex2D(ReShade::BackBuffer, take_pos) : tex2D(pointBuffer, take_pos), MagnifierOpacity);
+		}
 	} else {
 		return tex2D(ReShade::BackBuffer, uv);
 	}
