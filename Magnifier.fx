@@ -76,8 +76,6 @@ sampler2D pointBuffer {
 	AddressV  = BORDER;
 };
 
-// Does ReShade even have math functions? Please tell me where they are :v
-int abs(float n) { return n < 0 ? -n : n; }
 float2 uv_to_screen(float2 uv) { return float2(uv.x * ReShade::ScreenSize.x, uv.y * ReShade::ScreenSize.y); }
 bool outside_bounds(float2 p) { return p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0; }
 
