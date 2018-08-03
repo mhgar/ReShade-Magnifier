@@ -106,11 +106,11 @@ float4 PS_Magnifier(float4 pos : SV_POSITION, float2 uv : TEXCOORD) : SV_TARGET 
 		// Essentially offset from the magnifier and take a pixel to magnify (and there's also some scaling stuff, too).
 		float2 offset = uv - draw_pos;
 		float2 take_pos = MagnifyPosition + offset * scale;
-		float4 behind_pixel = tex2D(ReShade::BackBuffer, uv);
 		
 		if (outside_bounds(take_pos)) {
 			return float4(0.0, 0.0, 0.0, 1.0);
 		} else {
+			float4 behind_pixel = tex2D(ReShade::BackBuffer, uv);
 			return lerp(behind_pixel, Filtering == FILTER_LINEAR ? tex2D(ReShade::BackBuffer, take_pos) : tex2D(pointBuffer, take_pos), MagnifierOpacity);
 		}
 	} else {
