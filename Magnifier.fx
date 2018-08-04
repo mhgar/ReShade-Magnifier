@@ -3,7 +3,7 @@ uniform float2 DrawPosition <
 	ui_min = 0.0; 
 	ui_max = 1.0;
 	ui_step = 0.001;
-	ui_tooltip = "The position on your screen where the magnifier will draw (does not work in when the magnifier is set to fullscreen).";
+	ui_tooltip = "The position on your on screen where the magnifier will draw (does not work in when the magnifier is set to fullscreen).";
 > = float2(0.5, 0.5);
 
 uniform float2 MagnifyPosition <
@@ -11,7 +11,7 @@ uniform float2 MagnifyPosition <
 	ui_min = 0.0; 
 	ui_max = 1.0;
 	ui_step = 0.001;
-	ui_tooltip = "The position on your screen that the magnifier will magnify (you'll probably want to leave this at (0.5, 0.5)).";
+	ui_tooltip = "The position on your on screen that the magnifier will magnify (you'll probably want to leave this at (0.5, 0.5)).";
 > = float2(0.5, 0.5);
 
 uniform int Shape <
@@ -48,8 +48,16 @@ uniform float ZoomLevel <
 	ui_min = 1.0; 
 	ui_max = 10.0;
 	ui_step = 0.01;
-	ui_tooltip = "How many times the magnifier will scale things.";
+	ui_tooltip = "How much the magnifier will scale things.";
 > = 2.5;
+
+uniform float CircleFeathering <
+	ui_type = "drag";
+	ui_min = 0.0; 
+	ui_max = 1000.0;
+	ui_step = 1.0;
+	ui_tooltip = "Size of feathered edges in pixels, only works for the circle setting right now.";
+> = 0.0;
 
 uniform float MagnifierOpacity <
 	ui_type = "drag";
@@ -78,6 +86,18 @@ sampler2D pointBuffer {
 
 float2 uv_to_screen(float2 uv) { return float2(uv.x * ReShade::ScreenSize.x, uv.y * ReShade::ScreenSize.y); }
 bool outside_bounds(float2 p) { return p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0; }
+
+float circle_feathering_amt(float feather_size, float2 offset, float circle_radius) {
+	float magnitude = sqrt(offset.x * offset.x + offset.y * offset.y);
+	float startRadius = circle_radius - feather_size;
+	
+	if (magnitude >= circle_radius) return 1.0;	
+	if (magnitude <= startRadius) return 0.0;
+	
+	float falloff = (magnitude - startRadius) / feather_size;
+	
+	return falloff * falloff; // Squared falloff instead of linear
+}
 
 bool is_in_circle(float2 p, float2 centre, float radius) {
 	return (p.x - centre.x) * (p.x - centre.x) + 
@@ -108,8 +128,10 @@ float4 PS_Magnifier(float4 pos : SV_POSITION, float2 uv : TEXCOORD) : SV_TARGET 
 		if (outside_bounds(take_pos)) {
 			return float4(0.0, 0.0, 0.0, 1.0);
 		} else {
+			// Refactor once rectangular feathering works
 			float4 behind_pixel = tex2D(ReShade::BackBuffer, uv);
-			return lerp(behind_pixel, Filtering == FILTER_LINEAR ? tex2D(ReShade::BackBuffer, take_pos) : tex2D(pointBuffer, take_pos), MagnifierOpacity);
+			float opacity = (Shape == MODE_CIRCLE ? circle_feathering_amt(CircleFeathering, uv_to_screen(offset), CircleRadius) : 0.0);
+			return lerp(behind_pixel, lerp(Filtering == FILTER_LINEAR ? tex2D(ReShade::BackBuffer, take_pos) : tex2D(pointBuffer, take_pos), behind_pixel, opacity), MagnifierOpacity);
 		}
 	} else {
 		return tex2D(ReShade::BackBuffer, uv);
