@@ -3,7 +3,7 @@ uniform float2 DrawPosition <
 	ui_min = 0.0; 
 	ui_max = 1.0;
 	ui_step = 0.001;
-	ui_tooltip = "The position on your on screen where the magnifier will draw (does not work in when the magnifier is set to fullscreen).";
+	ui_tooltip = "The position on your screen where the magnifier will draw (does not work in when the magnifier is set to fullscreen).";
 > = float2(0.5, 0.5);
 
 uniform float2 MagnifyPosition <
@@ -11,7 +11,7 @@ uniform float2 MagnifyPosition <
 	ui_min = 0.0; 
 	ui_max = 1.0;
 	ui_step = 0.001;
-	ui_tooltip = "The position on your on screen that the magnifier will magnify (you'll probably want to leave this at (0.5, 0.5)).";
+	ui_tooltip = "The position on your screen that the magnifier will magnify (you'll probably want to leave this at (0.5, 0.5)).";
 > = float2(0.5, 0.5);
 
 uniform int Shape <
@@ -48,7 +48,7 @@ uniform float ZoomLevel <
 	ui_min = 1.0; 
 	ui_max = 10.0;
 	ui_step = 0.01;
-	ui_tooltip = "How much the magnifier will scale things.";
+	ui_tooltip = "How many times the magnifier will scale things.";
 > = 2.5;
 
 uniform float MagnifierOpacity <
